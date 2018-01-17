@@ -13,5 +13,33 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\modules">
+      <UniqueIdentifier>{fbb2b28b-4700-4dd1-b403-398b78cb2cec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\utils">
+      <UniqueIdentifier>{10b794ac-5233-49e7-886f-5dd86fba7ee5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="file_utils.c">
+      <Filter>源文件\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="student.c">
+      <Filter>源文件\modules</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="file_utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="student.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="static_datas.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
