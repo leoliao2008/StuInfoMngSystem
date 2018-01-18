@@ -16,6 +16,12 @@ long fsize(FILE *f){
 	return size;
 }
 
+void freplace(char *file_name,FILE *f,long fromIndex,char*data,long data_len){
+	fdelete(file_name, f, fromIndex, data_len);
+	finsert(f, fromIndex, data, data_len);
+	fflush(f);
+}
+
 long finsert(FILE *f,long toIndex,char *data,long data_len){
 	//see if toIndex is within the bound of the file, recorrect if not.
 	long size = fsize(f);

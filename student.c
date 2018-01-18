@@ -7,22 +7,21 @@
 
 void exit_on_null(FILE *f);
 void input_id(long *id);
-void input_name(char*name);
-void input_gender(char*gender);
+void input_name(char name[]);
+void input_gender(char gender[]);
 void input_age(int *age);
-void input_score(char *subject, float *score);
-static long size;
+void input_score(char subject[], float *score);
+static long file_size;
 static int count;
 static FILE *src;
+static int stu_size;
 
 void init_data_base(){
-	src = fopen(DATA_BASE_PATH, "rb+");
-	if (src == NULL){
-		src = fopen(DATA_BASE_PATH, "wb+");
-	};
+	src = fopen(DATA_BASE_PATH, "ab+");
 	exit_on_null(src);
-	size = fsize(src);
-	count = size / sizeof(Student);
+	file_size = fsize(src);
+	stu_size = sizeof(Student);
+	count = file_size / stu_size;
 }
 
 void add_new_student(){
@@ -35,22 +34,72 @@ void add_new_student(){
 	input_score("Maths", &stud.Maths);
 	input_score("English", &stud.English);
 	fseek(src, 0, SEEK_END);
-	fwrite(&stud, sizeof(Student), 1, src);
+	fwrite(&stud, stu_size, 1, src);
+	fflush(src);
 }
 
 void show_all_data(){
 	Student stud;
 	int cnt=0;
 	printf("Iterating Data Base:\n");
-	printf("\tName\tID\tGender\tChinese\tMaths\tEnglish\tTotal\n");
+	printf("Name\tID\tAge\tGender\tChinese\tMaths\tEnglish\tTotal\n");
 	float total;
-	while (fread(&stud,sizeof(Student),1,src)>0)
+	fseek(src, 0, SEEK_SET);
+	while (fread(&stud, stu_size, 1, src)>0)
 	{
 		total = stud.Chinese + stud.Maths + stud.English;
-		printf("\t%s\t%d\t%s\t%f.2\t%f.2\t%f.2\t%f.2\n", stud.name, stud.id, stud.gender, stud.Chinese, stud.Maths, stud.English, total);
+		printf("%s\t%d\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\n", stud.name, stud.id, stud.age,stud.gender, stud.Chinese, stud.Maths, stud.English, total);
 		cnt++;
 	}
 	printf("Students Count: %d.\n", cnt);
+}
+
+Student *get_stud(int id){
+	fseek(src, 0, SEEK_SET);
+	static Student stdu;
+	while (fread(&stdu,stu_size,1,src)>0)
+	{
+		if (stdu.id == id){
+			return &stdu;
+		}
+	}
+	return NULL;
+}
+
+int edit_stud(Student **p){
+	Student stdu = **p;
+	input_name(stdu.name);
+	input_gender(stdu.gender);
+	input_age(&stdu.age);
+	input_score("Chinese", &stdu.Chinese);
+	input_score("Maths", &stdu.Maths);
+	input_score("English", &stdu.English);
+	printf("Confirm change? y/n\n");
+	fflush(stdin);
+	char input = _getch();
+	if (input == 'y'){
+		fseek(src, 0, SEEK_SET);
+		int cnt = 0;
+		Student temp;
+		while (fread(&temp,stu_size,1,src)>0)
+		{
+			if (temp.id == stdu.id){
+				printf("find student!\n");
+				printf("New name is %s\n", stdu.name);
+				freplace(DATA_BASE_PATH, src, cnt*stu_size, (char*)&stdu, stu_size);
+				*p = &stdu;
+				return 1;
+			}
+			else{
+               cnt++;
+			}
+		}
+	}
+	else{
+		printf("Abort changes.\n");
+	}
+	return -1;
+
 }
 
 static void exit_on_null(FILE *f){
@@ -61,46 +110,26 @@ static void exit_on_null(FILE *f){
 	}
 }
 
-static void input_name(char*name){
+static void input_name(char name[]){
 	printf("Please enter name(max len <20):");
-	char input;
-	int count=0;
-	while ((input=getchar())>0)
-	{
-		if (count < 20){
-			if (input == '\n'){
-				break;
-			}
-            name[count++] = input;
-		}else{
-			printf("Length exceeds maximum, please retry:\n");
-			input_name(name);
-			break;
-		}
+	fflush(stdin);
+	scanf("%s", name);
+	if (strlen(name) >= 20){
+		printf("Length exceeds maximum, please retry:\n");
+		input_name(name);
 	}
 }
 
-static void input_gender(char*gender){
-	printf("Please enter gender(male//female):");
-	char *temp = (char*)malloc(sizeof(char)* 20);
-	gets(temp);
-	if (strcmp(temp, "female") ==0|| strcmp(temp, "male")==0){
-		strcat(gender, temp);
-		free(temp);
-	}else{
-		free(temp);
-		printf("Only male of female is selectable!\n");
+static void input_gender(char gender[]){
+	printf("Please enter gender(male/female):");
+	fflush(stdin);
+	scanf("%s", gender);
+	if (strcmp(gender, "female") != 0 && strcmp(gender, "male") != 0){
+		printf("Only male or female is selectable!\n");
 		input_gender(gender);
 	}
 }
 
-//char name[20];
-//int age;
-//char gender[10];
-//long id;
-//float Chinese;
-//float Maths;
-//float English;
 
 static void input_id(long *id){
 	printf("Please enter Id:");
@@ -121,18 +150,18 @@ static void input_age(int *age){
 	}
 }
 
-static void input_score(char *subject, float *score){
+static void input_score(char subject[], float *score){
 	printf("Please enter the score of %s:", subject);
-	float i = 0;
-	scanf("%f", &i);
-	if (i > MAX_SCORE || i < MIN_SCORE){
+	scanf("%f", score);
+	if (*score > MAX_SCORE || *score < MIN_SCORE){
 		printf("Invalid score for %s, please retry!\n",subject);
 		input_score(subject, score);
 	}
-	else{
-		*score = i;
-	}
 
+}
+
+void close_data_base(){
+	fclose(src);
 }
 
 
